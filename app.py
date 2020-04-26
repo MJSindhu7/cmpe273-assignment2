@@ -30,16 +30,6 @@ class Submission(Model):
     class Meta:
     	database = db
 
-#Validation schema Marshmallow
-class TestSchema(Schema):
-	subject = fields.String(required=True)
-	#keys = fields.String(required=True)
-
-	#@validates("keys")
-	#def validate_keys(self, value):
-		#if len(val) > 1:
-			#raise ValidationError("Not a valid key")
-
 
 # For creating test
 @app.route('/api/tests', methods = ['POST'])
@@ -49,8 +39,6 @@ def create_test():
 	content = request.json
 	sub = content["subject"]
 	ans_keys = content["answer_keys"]
-	dataValidation = {"subject" : ""}
-	TestSchema.load(dataValidation)
 	test = Test(subject = sub, answer_keys=ans_keys)
 	test.save()
 	db.close()
@@ -128,9 +116,7 @@ def check_all_scantron_submissions(tid):
 #Downloading the content from scantronURL
 @app.route('/files/<fName>')
 def download_file(fName):
-	print("inside")
 	path = "./files/"
-	print(path)
 	return send_from_directory(path,fName, as_attachment=True)
 
     

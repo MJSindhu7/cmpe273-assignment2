@@ -7,7 +7,8 @@ In the assignment 2, you will be building a scantron OCR application in Python F
 * Score calculation against answer keys - **Done**
 * Score reporting - **Done**
 
-ORM Framework - Pewee
+ORM Framework - **Pewee**
+
 Command to start the application - env FLASK_APP=app.py flask run
 
 All the above features will be handled via a set of REST APIs. The application will persist data into a local SQLite DB.

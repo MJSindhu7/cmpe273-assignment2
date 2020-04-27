@@ -34,7 +34,7 @@ class Submission(Model):
     	database = db
 
 def validate_keys(value):
-	keys = ["A","B","C","D"]
+	keys = ["A","B","C","D","E"]
 	for i in range(1,51):
 		if value[str(i)] not in keys:
 			raise ValidationError("Not a valid key")
@@ -68,10 +68,12 @@ def create_test():
 	test = Test(subject = sub, answer_keys=ans_keys)
 	test.save()
 	db.close()
+	submis = []
 	return {
         "test_id" : test.id,
         "subject" : test.subject,
-        "answer_keys" : test.answer_keys
+        "answer_keys" : test.answer_keys,
+        "submissions" : submis
     }, 201
 
 

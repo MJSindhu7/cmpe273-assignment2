@@ -2,6 +2,9 @@ from flask import Flask, escape, request, send_from_directory, send_file
 from playhouse.sqlite_ext import *
 from werkzeug.utils import secure_filename
 from marshmallow import Schema, fields, validate, ValidationError
+from marshmallow.validate import Length, Range
+from pprint import pprint
+
 import json
 import os
 
@@ -30,6 +33,21 @@ class Submission(Model):
     class Meta:
     	database = db
 
+def validate_keys(value):
+	keys = ["A","B","C","D"]
+	for i in range(1,51):
+		if value[str(i)] not in keys:
+			raise ValidationError("Not a valid key")
+
+class TestSchema(Schema):
+	subject = fields.String(required = True)
+	answer_keys = fields.Dict(keys=fields.Str(), values=fields.Str(), validate = validate_keys)
+	
+
+class ScantronSchema(Schema):
+	name = fields.String(required = True)
+	subject = fields.String(required = True)
+	answers = fields.Dict(keys=fields.Str(), values=fields.Str(), validate = validate_keys)
 
 # For creating test
 @app.route('/api/tests', methods = ['POST'])
@@ -39,6 +57,14 @@ def create_test():
 	content = request.json
 	sub = content["subject"]
 	ans_keys = content["answer_keys"]
+	data = {"subject" : sub, "answer_keys" : ans_keys}
+	schema = TestSchema()
+	try:
+		schema.load(data)
+	except ValidationError as err:
+		error = err.messages
+		pprint(err.messages)
+		return error
 	test = Test(subject = sub, answer_keys=ans_keys)
 	test.save()
 	db.close()
@@ -58,6 +84,16 @@ def write_scantrons(tid):
 		return "Upload valid file"
 	jsonData = json.loads(fmtData)
 	file = request.files['data']
+	name = jsonData["name"]
+	sub = jsonData["subject"]
+	dataSent = {"name" : name ,"subject" : sub, "answers" : jsonData["answers"]}
+	schema = ScantronSchema()
+	try:
+		schema.load(dataSent)
+	except ValidationError as err:
+		error = err.messages
+		pprint(err.messages)
+		return error
 	db.connect()
 	db.create_tables([Submission])
 	if not os.path.exists("./files/"):
@@ -65,8 +101,6 @@ def write_scantrons(tid):
 	with open(os.path.join("./files/", file.filename), "wb") as fp:
 		fp.write(rcvdData)
 	url = "http://localhost:5000/files/"+file.filename
-	name = jsonData["name"]
-	sub = jsonData["subject"]
 	score = 0
 	result = {}
 	return_test = Test.get(Test.id == tid)
